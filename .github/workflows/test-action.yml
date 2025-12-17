@@ -1,0 +1,32 @@
+name: Test Action
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Test Code Discovery Action
+        uses: ./
+        id: discovery
+        with:
+          api-endpoint: ${{ secrets.API_DISCOVERY_ENDPOINT || 'https://api.example.com' }}
+          api-token: ${{ secrets.API_DISCOVERY_TOKEN || 'test-token' }}
+          dry-run: 'true'
+      
+      - name: Display outputs
+        run: |
+          echo "Spec path: ${{ steps.discovery.outputs.spec-path }}"
+          echo "Success: ${{ steps.discovery.outputs.success }}"
+

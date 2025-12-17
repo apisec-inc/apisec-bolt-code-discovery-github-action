@@ -1,0 +1,166 @@
+name: 'APIsec Bolt - Code Discovery'
+description: 'Automatically discover API endpoints and upload to APIsec'
+author: 'APIsec'
+
+branding:
+  icon: 'search'
+  color: 'blue'
+
+inputs:
+  api-endpoint:
+    description: 'External API endpoint URL'
+    default: 'https://api.dev.apisecapps.com'
+    required: false
+  api-token:
+    description: 'Bearer token for API authentication'
+    required: true
+  repo-path:
+    description: 'Path to repository root to analyze'
+    required: false
+    default: '.'
+  config-path:
+    description: 'Path to .codediscovery.yml config file (optional)'
+    required: false
+    default: '.codediscovery.yml'
+  pr-title:
+    description: 'Pull request title'
+    required: false
+    default: 'chore: update OpenAPI specification'
+  pr-body:
+    description: 'Pull request body'
+    required: false
+    default: 'Automatically generated OpenAPI specification'
+  dry-run:
+    description: 'Skip API upload (for testing)'
+    required: false
+    default: 'false'
+
+outputs:
+  spec-path:
+    description: 'Path to generated OpenAPI specification'
+  endpoints-count:
+    description: 'Number of endpoints discovered'
+  frameworks-detected:
+    description: 'Comma-separated list of detected frameworks'
+  application-id:
+    description: 'Application ID from API (if uploaded)'
+  instance-id:
+    description: 'Instance ID from API (if uploaded)'
+  pr-url:
+    description: 'URL of created pull request'
+  success:
+    description: 'Whether discovery succeeded'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Install Code Discovery CLI
+      shell: bash
+      run: |
+        python3 -m pip install --upgrade pip
+        pip install code-discovery==0.2.0
+    
+    - name: Configure API credentials
+      shell: bash
+      run: |
+        mkdir -p ~/.config
+        cat > ~/.apisec << EOF
+        [api-discovery]
+        endpoint = ${{ inputs.api-endpoint }}
+        token = ${{ inputs.api-token }}
+        EOF
+        chmod 600 ~/.apisec
+    
+    - name: Run API Discovery
+      id: discovery
+      shell: bash
+      continue-on-error: true
+      run: |
+        # Build command arguments
+        CMD_ARGS="--repo-path ${{ inputs.repo-path }}"
+        CMD_ARGS="$CMD_ARGS --output apisec-bolt-code-discovery/openapi_spec.yaml"
+        
+        if [ "${{ inputs.config-path }}" != ".codediscovery.yml" ]; then
+          CMD_ARGS="$CMD_ARGS --config ${{ inputs.config-path }}"
+        fi
+        
+        if [ "${{ inputs.dry-run }}" == "true" ]; then
+          CMD_ARGS="$CMD_ARGS --dry-run"
+        fi
+        
+        # Run discovery (continue on error - don't fail workflow)
+        code-discovery $CMD_ARGS || echo "Discovery completed with warnings"
+        
+        # Extract outputs from state file and CLI output
+        if [ -f apisec-bolt-code-discovery/state.yaml ]; then
+          APP_ID=$(grep 'applicationId:' apisec-bolt-code-discovery/state.yaml | cut -d'"' -f2 || echo "")
+          INSTANCE_ID=$(grep 'instanceId:' apisec-bolt-code-discovery/state.yaml | cut -d'"' -f2 || echo "")
+          echo "application-id=$APP_ID" >> $GITHUB_OUTPUT
+          echo "instance-id=$INSTANCE_ID" >> $GITHUB_OUTPUT
+        fi
+        
+        echo "spec-path=apisec-bolt-code-discovery/openapi_spec.yaml" >> $GITHUB_OUTPUT
+        echo "success=true" >> $GITHUB_OUTPUT
+    
+    - name: Create Pull Request
+      if: steps.discovery.outcome == 'success' && inputs.dry-run != 'true'
+      shell: bash
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        # Configure git
+        git config user.name "github-actions[bot]"
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+        
+        # Get base branch (default to main if not available)
+        BASE_BRANCH="${{ github.ref_name }}"
+        if [ "$BASE_BRANCH" == "HEAD" ] || [ -z "$BASE_BRANCH" ]; then
+          BASE_BRANCH="main"
+        fi
+        
+        # Fetch all branches
+        git fetch origin
+        
+        # Create new branch with timestamp
+        BRANCH_NAME="code-discovery/update-openapi-$(date +%s)"
+        
+        # Checkout base branch first, then create new branch
+        git checkout $BASE_BRANCH 2>/dev/null || git checkout -b $BASE_BRANCH origin/$BASE_BRANCH
+        git checkout -b $BRANCH_NAME 2>/dev/null || git checkout $BRANCH_NAME
+        
+        # Add generated files
+        git add apisec-bolt-code-discovery/openapi_spec.yaml apisec-bolt-code-discovery/state.yaml 2>/dev/null || true
+        
+        # Check if there are changes
+        if git diff --staged --quiet; then
+          echo "No changes to commit"
+          echo "pr-url=" >> $GITHUB_OUTPUT
+        else
+          # Commit
+          git commit -m "${{ inputs.pr-title }}" || exit 0
+          
+          # Push branch
+          git push origin $BRANCH_NAME --force-with-lease 2>/dev/null || git push origin $BRANCH_NAME
+          
+          # Create PR (check if PR already exists first)
+          EXISTING_PR=$(gh pr list --head $BRANCH_NAME --json number --jq '.[0].number' 2>/dev/null || echo "")
+          
+          if [ -n "$EXISTING_PR" ] && [ "$EXISTING_PR" != "null" ] && [ "$EXISTING_PR" != "" ]; then
+            PR_URL=$(gh pr view $EXISTING_PR --json url --jq '.url' 2>/dev/null || echo "")
+            echo "Using existing pull request: $PR_URL"
+          else
+            PR_URL=$(gh pr create \
+              --title "${{ inputs.pr-title }}" \
+              --body "${{ inputs.pr-body }}" \
+              --base $BASE_BRANCH \
+              --head $BRANCH_NAME \
+              --repo ${{ github.repository }} 2>/dev/null || echo "")
+          fi
+          
+          echo "pr-url=$PR_URL" >> $GITHUB_OUTPUT
+          
+          if [ -n "$PR_URL" ]; then
+            echo "✓ Created pull request: $PR_URL"
+          fi
+        fi
+
