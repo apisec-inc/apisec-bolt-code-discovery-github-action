@@ -1,6 +1,6 @@
-name: 'APIsec Bolt - Code Discovery'
-description: 'Automatically discover API endpoints and upload to APIsec'
-author: 'APIsec'
+name: 'Code Discovery - API Discovery'
+description: 'Automatically discover API endpoints and upload to API security platform'
+author: 'APIsec Bolt'
 
 branding:
   icon: 'search'
@@ -9,8 +9,7 @@ branding:
 inputs:
   api-endpoint:
     description: 'External API endpoint URL'
-    default: 'https://api.dev.apisecapps.com'
-    required: false
+    required: true
   api-token:
     description: 'Bearer token for API authentication'
     required: true
@@ -58,7 +57,7 @@ runs:
       shell: bash
       run: |
         python3 -m pip install --upgrade pip
-        pip install code-discovery==0.2.0
+        pip install code-discovery==0.2.1
     
     - name: Configure API credentials
       shell: bash
@@ -89,7 +88,7 @@ runs:
         fi
         
         # Run discovery (continue on error - don't fail workflow)
-        code-discovery $CMD_ARGS || echo "Discovery completed with warnings"
+        code-discovery $CMD_ARGS || echo "⚠️ Discovery completed with warnings"
         
         # Extract outputs from state file and CLI output
         if [ -f apisec-bolt-code-discovery/state.yaml ]; then
