@@ -1,6 +1,6 @@
 # Code Discovery GitHub Action
 
-Automatically discover API endpoints in your repository and upload them to your API security platform. This action uses the Code Discovery CLI to scan your codebase, generate OpenAPI specifications, and create pull requests with the results.
+Automatically discover API endpoints in your repository and upload them to the APIsec platform. This action uses the Code Discovery CLI to scan your codebase, generate OpenAPI specifications, and create pull requests with the results.
 
 ## Features
 
