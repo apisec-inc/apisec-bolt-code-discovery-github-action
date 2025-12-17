@@ -29,7 +29,7 @@ jobs:
       pull-requests: write
     steps:
       - uses: actions/checkout@v4
-      - uses: apisec-bolt/code-discovery-action@v1
+      - uses: apisec-inc/apisec-bolt-code-discovery-github-action@v0.1.0
         with:
           api-endpoint: ${{ secrets.API_DISCOVERY_ENDPOINT }}
           api-token: ${{ secrets.API_DISCOVERY_TOKEN }}
@@ -52,7 +52,7 @@ jobs:
       pull-requests: write
     steps:
       - uses: actions/checkout@v4
-      - uses: apisec-bolt/code-discovery-action@v1
+      - uses: apisec-inc/apisec-bolt-code-discovery-github-action@v0.1.0
         with:
           api-endpoint: ${{ secrets.API_DISCOVERY_ENDPOINT }}
           api-token: ${{ secrets.API_DISCOVERY_TOKEN }}
@@ -63,7 +63,7 @@ jobs:
 ### Custom Configuration
 
 ```yaml
-- uses: apisec-bolt/code-discovery-action@v1
+- uses: apisec-inc/apisec-bolt-code-discovery-github-action@v0.1.0
   with:
     api-endpoint: ${{ secrets.API_DISCOVERY_ENDPOINT }}
     api-token: ${{ secrets.API_DISCOVERY_TOKEN }}
@@ -74,7 +74,7 @@ jobs:
 ### Dry Run (Testing)
 
 ```yaml
-- uses: apisec-bolt/code-discovery-action@v1
+- uses: apisec-inc/apisec-bolt-code-discovery-github-action@v0.1.0
   with:
     api-endpoint: ${{ secrets.API_DISCOVERY_ENDPOINT }}
     api-token: ${{ secrets.API_DISCOVERY_TOKEN }}
@@ -171,5 +171,33 @@ MIT License - see [LICENSE](LICENSE) file for details.
 
 ## Support
 
-For issues and questions, please open an issue in the [repository](https://github.com/apisec-bolt/code-discovery-action).
+For issues and questions, please open an issue in the [repository](https://github.com/apisec-inc/apisec-bolt-code-discovery-github-action).
+
+## Quick Start
+
+1. **Add workflow file** `.github/workflows/api-discovery.yml`:
+   ```yaml
+   name: API Discovery
+   on:
+     push:
+       branches: [main]
+   jobs:
+     discover:
+       runs-on: ubuntu-latest
+       permissions:
+         contents: write
+         pull-requests: write
+       steps:
+         - uses: actions/checkout@v4
+         - uses: apisec-inc/apisec-bolt-code-discovery-github-action@v0.1.0
+           with:
+             api-endpoint: ${{ secrets.API_DISCOVERY_ENDPOINT }}
+             api-token: ${{ secrets.API_DISCOVERY_TOKEN }}
+   ```
+
+2. **Configure secrets** in repository Settings → Secrets:
+   - `API_DISCOVERY_ENDPOINT` - Your API endpoint URL
+   - `API_DISCOVERY_TOKEN` - Your Bearer token
+
+3. **Push to trigger** - The action will run automatically!
 
