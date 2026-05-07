@@ -33,6 +33,14 @@ inputs:
     description: 'Skip API upload (for testing)'
     required: false
     default: 'false'
+  host-urls:
+    description: >-
+      Comma-separated list of explicit OpenAPI server URLs for the discovered
+      API (e.g. https://api.example.com). Required when no parser extracts a
+      host from your sources, otherwise the API cannot create an application
+      instance and state is never saved.
+    required: false
+    default: ''
 
 outputs:
   spec-path:
@@ -57,7 +65,10 @@ runs:
       shell: bash
       run: |
         python3 -m pip install --upgrade pip
-        pip install code-discovery==0.3.5
+        # TEMPORARY: install from fix branch to validate --server flag end-to-end
+        # before cutting a CLI release. Revert to `code-discovery==<version>`
+        # when the fix lands in PyPI.
+        pip install "git+https://github.com/apisec-inc/ApisecCodeBoltCore.git@fix/server-url-and-instance-guard"
     
     - name: Configure API credentials
       shell: bash
@@ -86,7 +97,20 @@ runs:
         if [ "${{ inputs.dry-run }}" == "true" ]; then
           CMD_ARGS="$CMD_ARGS --dry-run"
         fi
-        
+
+        # Forward host-urls to the CLI as one --server flag per URL so the
+        # generated spec's `servers` array is non-relative and the backend
+        # can create an application instance.
+        if [ -n "${{ inputs.host-urls }}" ]; then
+          IFS=',' read -ra _HOST_URLS <<< "${{ inputs.host-urls }}"
+          for _url in "${_HOST_URLS[@]}"; do
+            _url="$(echo "$_url" | xargs)"
+            if [ -n "$_url" ]; then
+              CMD_ARGS="$CMD_ARGS --server $_url"
+            fi
+          done
+        fi
+
         # Run discovery (continue on error - don't fail workflow)
         code-discovery $CMD_ARGS || echo "⚠️ Discovery completed with warnings"
         
