@@ -33,6 +33,14 @@ inputs:
     description: 'Skip API upload (for testing)'
     required: false
     default: 'false'
+  host-url:
+    description: >-
+      Explicit OpenAPI server URL for the discovered API
+      (e.g. https://api.example.com). Required when no parser extracts
+      a host from your sources; without it the APIsec backend cannot
+      create an application instance and state is never saved across runs.
+    required: false
+    default: ''
 
 outputs:
   spec-path:
@@ -86,7 +94,11 @@ runs:
         if [ "${{ inputs.dry-run }}" == "true" ]; then
           CMD_ARGS="$CMD_ARGS --dry-run"
         fi
-        
+
+        if [ -n "${{ inputs.host-url }}" ]; then
+          CMD_ARGS="$CMD_ARGS --server ${{ inputs.host-url }}"
+        fi
+
         # Run discovery (continue on error - don't fail workflow)
         code-discovery $CMD_ARGS || echo "⚠️ Discovery completed with warnings"
         
