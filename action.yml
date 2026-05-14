@@ -57,7 +57,7 @@ runs:
       shell: bash
       run: |
         python3 -m pip install --upgrade pip
-        pip install code-discovery==0.3.5
+        pip install code-discovery==0.3.6
     
     - name: Configure API credentials
       shell: bash
