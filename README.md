@@ -4,7 +4,7 @@ Automatically discover API endpoints in your repository and upload them to the A
 
 ## Features
 
-- 🔍 **Automatic Framework Detection** - Detects Spring Boot, Micronaut, FastAPI, Flask, ASP.NET Core, and more
+- 🔍 **Automatic Framework Detection** - Detects Spring Boot, Micronaut, Argos, FastAPI, Flask, Django, Express, ASP.NET Core, Gin and more
 - 📝 **OpenAPI Generation** - Generates OpenAPI 3.0 specifications from your code
 - 🔄 **State Management** - Tracks application and instance IDs across runs
 - 🔀 **Pull Request Creation** - Automatically creates PRs with discovered endpoints
@@ -29,7 +29,7 @@ jobs:
       pull-requests: write
     steps:
       - uses: actions/checkout@v4
-      - uses: apisec-inc/apisec-bolt-code-discovery-github-action@v0.1.0
+      - uses: apisec-inc/apisec-bolt-code-discovery-github-action@v0.1.5
         with:
           api-endpoint: ${{ secrets.API_DISCOVERY_ENDPOINT }}
           api-token: ${{ secrets.API_DISCOVERY_TOKEN }}
@@ -52,7 +52,7 @@ jobs:
       pull-requests: write
     steps:
       - uses: actions/checkout@v4
-      - uses: apisec-inc/apisec-bolt-code-discovery-github-action@v0.1.0
+      - uses: apisec-inc/apisec-bolt-code-discovery-github-action@v0.1.5
         with:
           api-endpoint: ${{ secrets.API_DISCOVERY_ENDPOINT }}
           api-token: ${{ secrets.API_DISCOVERY_TOKEN }}
@@ -63,7 +63,7 @@ jobs:
 ### Custom Configuration
 
 ```yaml
-- uses: apisec-inc/apisec-bolt-code-discovery-github-action@v0.1.0
+- uses: apisec-inc/apisec-bolt-code-discovery-github-action@v0.1.5
   with:
     api-endpoint: ${{ secrets.API_DISCOVERY_ENDPOINT }}
     api-token: ${{ secrets.API_DISCOVERY_TOKEN }}
@@ -74,7 +74,7 @@ jobs:
 ### Dry Run (Testing)
 
 ```yaml
-- uses: apisec-inc/apisec-bolt-code-discovery-github-action@v0.1.0
+- uses: apisec-inc/apisec-bolt-code-discovery-github-action@v0.1.5
   with:
     api-endpoint: ${{ secrets.API_DISCOVERY_ENDPOINT }}
     api-token: ${{ secrets.API_DISCOVERY_TOKEN }}
@@ -92,6 +92,7 @@ jobs:
 | `pr-title` | ❌ No | `chore: update OpenAPI specification` | Pull request title |
 | `pr-body` | ❌ No | `Automatically generated OpenAPI specification` | Pull request body |
 | `dry-run` | ❌ No | `false` | Skip API upload (for testing) |
+| `host-url` | ⚠️ Recommended | `''` | OpenAPI server URL (e.g. `https://api.example.com`). Required when no parser can extract a host from your sources; without it, state isn't saved across runs. |
 
 ## Outputs
 
@@ -120,7 +121,7 @@ permissions:
 
 ## How It Works
 
-1. **Install CLI** - Installs Code Discovery CLI (version 0.2.0)
+1. **Install CLI** - Installs Code Discovery CLI (version 0.5.0)
 2. **Configure Credentials** - Sets up API credentials from inputs
 3. **Run Discovery** - Scans repository and generates OpenAPI spec
 4. **Create PR** - Creates a new branch, commits files, and opens a pull request
@@ -153,9 +154,11 @@ The action is designed to be non-blocking:
 
 ## Supported Frameworks
 
-- **Java**: Spring Boot, Micronaut
-- **Python**: FastAPI, Flask
+- **Java**: Spring Boot, Micronaut, Argos
+- **Python**: FastAPI, Flask, Django
+- **Node.js**: Express
 - **.NET**: ASP.NET Core
+- **Go**: Gin
 
 More frameworks coming soon!
 
@@ -189,7 +192,7 @@ For issues and questions, please open an issue in the [repository](https://githu
          pull-requests: write
        steps:
          - uses: actions/checkout@v4
-         - uses: apisec-inc/apisec-bolt-code-discovery-github-action@v0.1.0
+         - uses: apisec-inc/apisec-bolt-code-discovery-github-action@v0.1.5
            with:
              api-endpoint: ${{ secrets.API_DISCOVERY_ENDPOINT }}
              api-token: ${{ secrets.API_DISCOVERY_TOKEN }}
