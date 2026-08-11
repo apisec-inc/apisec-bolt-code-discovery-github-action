@@ -29,7 +29,7 @@ jobs:
       pull-requests: write
     steps:
       - uses: actions/checkout@v4
-      - uses: apisec-inc/apisec-bolt-code-discovery-github-action@v0.1.7
+      - uses: apisec-inc/apisec-bolt-code-discovery-github-action@v0.1.8
         with:
           api-endpoint: ${{ secrets.API_DISCOVERY_ENDPOINT }}
           api-token: ${{ secrets.API_DISCOVERY_TOKEN }}
@@ -52,7 +52,7 @@ jobs:
       pull-requests: write
     steps:
       - uses: actions/checkout@v4
-      - uses: apisec-inc/apisec-bolt-code-discovery-github-action@v0.1.7
+      - uses: apisec-inc/apisec-bolt-code-discovery-github-action@v0.1.8
         with:
           api-endpoint: ${{ secrets.API_DISCOVERY_ENDPOINT }}
           api-token: ${{ secrets.API_DISCOVERY_TOKEN }}
@@ -63,7 +63,7 @@ jobs:
 ### Custom Configuration
 
 ```yaml
-- uses: apisec-inc/apisec-bolt-code-discovery-github-action@v0.1.7
+- uses: apisec-inc/apisec-bolt-code-discovery-github-action@v0.1.8
   with:
     api-endpoint: ${{ secrets.API_DISCOVERY_ENDPOINT }}
     api-token: ${{ secrets.API_DISCOVERY_TOKEN }}
@@ -74,7 +74,7 @@ jobs:
 ### Dry Run (Testing)
 
 ```yaml
-- uses: apisec-inc/apisec-bolt-code-discovery-github-action@v0.1.7
+- uses: apisec-inc/apisec-bolt-code-discovery-github-action@v0.1.8
   with:
     api-endpoint: ${{ secrets.API_DISCOVERY_ENDPOINT }}
     api-token: ${{ secrets.API_DISCOVERY_TOKEN }}
@@ -121,7 +121,7 @@ permissions:
 
 ## How It Works
 
-1. **Install CLI** - Installs Code Discovery CLI (version 0.6.0)
+1. **Install CLI** - Installs Code Discovery CLI (version 0.7.1)
 2. **Configure Credentials** - Sets up API credentials from inputs
 3. **Run Discovery** - Scans repository and generates OpenAPI spec
 4. **Create PR** - Creates a new branch, commits files, and opens a pull request
@@ -192,7 +192,7 @@ For issues and questions, please open an issue in the [repository](https://githu
          pull-requests: write
        steps:
          - uses: actions/checkout@v4
-         - uses: apisec-inc/apisec-bolt-code-discovery-github-action@v0.1.7
+         - uses: apisec-inc/apisec-bolt-code-discovery-github-action@v0.1.8
            with:
              api-endpoint: ${{ secrets.API_DISCOVERY_ENDPOINT }}
              api-token: ${{ secrets.API_DISCOVERY_TOKEN }}
