@@ -121,7 +121,7 @@ permissions:
 
 ## How It Works
 
-1. **Install CLI** - Installs Code Discovery CLI (version 0.6.0)
+1. **Install CLI** - Installs Code Discovery CLI (version 0.7.2)
 2. **Configure Credentials** - Sets up API credentials from inputs
 3. **Run Discovery** - Scans repository and generates OpenAPI spec
 4. **Create PR** - Creates a new branch, commits files, and opens a pull request
