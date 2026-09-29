@@ -1,18 +1,10 @@
 # Code Discovery GitHub Action
 
-Automatically discover API endpoints in your repository and upload them to the APIsec platform. This action uses the Code Discovery CLI to scan your codebase, generate OpenAPI specifications, and create pull requests with the results.
+Scans your repository with the Surface CLI (`apisec-code-bolt`) and uploads the result to APIsec. Existing Code Discovery apps are updated in place.
 
-## Features
-
-- 🔍 **Automatic Framework Detection** - Detects Spring Boot, Micronaut, Argos, FastAPI, Flask, Django, Express, ASP.NET Core, Gin and more
-- 📝 **OpenAPI Generation** - Generates OpenAPI 3.0 specifications from your code
-- 🔄 **State Management** - Tracks application and instance IDs across runs
-- 🔀 **Pull Request Creation** - Automatically creates PRs with discovered endpoints
-- ⚠️ **Non-Blocking** - Warnings don't fail your workflow
+Ship this cutover as **`v1.0.0`** / **`v1`**. Keep **`v0.1.8`** pinned if you need to roll back to Code Discovery.
 
 ## Usage
-
-### Basic Example
 
 ```yaml
 name: API Discovery
@@ -24,183 +16,66 @@ on:
 jobs:
   discover:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      pull-requests: write
     steps:
       - uses: actions/checkout@v4
-      - uses: apisec-inc/apisec-bolt-code-discovery-github-action@v0.1.7
+      - uses: apisec-inc/apisec-bolt-code-discovery-github-action@v1
         with:
           api-endpoint: ${{ secrets.API_DISCOVERY_ENDPOINT }}
           api-token: ${{ secrets.API_DISCOVERY_TOKEN }}
 ```
 
-### Scheduled Runs
+`api-endpoint` is the applicationsservice base URL (the same value Surface uses as `--api-url`).
+
+### Dry run
 
 ```yaml
-name: API Discovery
-
-on:
-  schedule:
-    - cron: '0 2 * * *' # Daily at 2 AM
-
-jobs:
-  discover:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      pull-requests: write
-    steps:
-      - uses: actions/checkout@v4
-      - uses: apisec-inc/apisec-bolt-code-discovery-github-action@v0.1.7
-        with:
-          api-endpoint: ${{ secrets.API_DISCOVERY_ENDPOINT }}
-          api-token: ${{ secrets.API_DISCOVERY_TOKEN }}
-          pr-title: 'chore: update OpenAPI specification [skip ci]'
-          pr-body: 'Automatically generated OpenAPI specification from code discovery'
-```
-
-### Custom Configuration
-
-```yaml
-- uses: apisec-inc/apisec-bolt-code-discovery-github-action@v0.1.7
+- uses: apisec-inc/apisec-bolt-code-discovery-github-action@v1
   with:
     api-endpoint: ${{ secrets.API_DISCOVERY_ENDPOINT }}
     api-token: ${{ secrets.API_DISCOVERY_TOKEN }}
-    repo-path: './backend'
-    config-path: './backend/.codediscovery.yml'
-```
-
-### Dry Run (Testing)
-
-```yaml
-- uses: apisec-inc/apisec-bolt-code-discovery-github-action@v0.1.7
-  with:
-    api-endpoint: ${{ secrets.API_DISCOVERY_ENDPOINT }}
-    api-token: ${{ secrets.API_DISCOVERY_TOKEN }}
-    dry-run: true  # Skip API upload, still generates spec
+    dry-run: true
 ```
 
 ## Inputs
 
 | Input | Required | Default | Description |
 |-------|----------|---------|-------------|
-| `api-endpoint` | ✅ Yes | - | External API endpoint URL |
-| `api-token` | ✅ Yes | - | Bearer token for API authentication |
-| `repo-path` | ❌ No | `.` | Path to repository root to analyze |
-| `config-path` | ❌ No | `.codediscovery.yml` | Path to .codediscovery.yml config file |
-| `pr-title` | ❌ No | `chore: update OpenAPI specification` | Pull request title |
-| `pr-body` | ❌ No | `Automatically generated OpenAPI specification` | Pull request body |
-| `dry-run` | ❌ No | `false` | Skip API upload (for testing) |
-| `host-url` | ⚠️ Recommended | `''` | OpenAPI server URL (e.g. `https://api.example.com`). Required when no parser can extract a host from your sources; without it, state isn't saved across runs. |
+| `api-endpoint` | Yes | | APIsec applicationsservice base URL |
+| `api-token` | Yes | | APIsec personal access token |
+| `repo-path` | No | `.` | Repository root to analyze |
+| `dry-run` | No | `false` | Analyse only; do not upload |
+| `config-path` | No | `.codediscovery.yml` | Ignored |
+| `host-url` | No | | Ignored — set the instance host in the APIsec console |
+| `pr-title` | No | | Ignored — no spec PR is opened |
+| `pr-body` | No | | Ignored — no spec PR is opened |
 
 ## Outputs
 
 | Output | Description |
 |--------|-------------|
-| `spec-path` | Path to generated OpenAPI specification (`apisec-bolt-code-discovery/openapi_spec.yaml`) |
-| `application-id` | Application ID from API (if uploaded) |
-| `instance-id` | Instance ID from API (if uploaded) |
-| `pr-url` | URL of created pull request |
-| `success` | Whether discovery succeeded |
+| `success` | `true` only when the CLI exited 0 |
+| `application-id` | APIsec application id after a successful upload |
+| `endpoints-count` | Number of API routes found |
+| `frameworks-detected` | Comma-separated frameworks |
+| `spec-path` | Empty (spec is published by the engine) |
+| `instance-id` | Empty |
+| `pr-url` | Empty |
 
-## Required Permissions
+The Action never fails the workflow. Check `success` if a later step should stop.
 
-This action requires the following GitHub permissions:
+## How it works
 
-- `contents: write` - To commit generated files
-- `pull-requests: write` - To create pull requests
+1. Installs Python 3.11 and Surface CLI `0.1.11`
+2. Registers or reuses one APIsec application per GitHub repo (`github:<repository_id>`)
+3. Uploads the Surface manifest; the reasoning engine publishes the OpenAPI spec
 
-Add these permissions to your workflow:
-
-```yaml
-permissions:
-  contents: write
-  pull-requests: write
-```
-
-## How It Works
-
-1. **Install CLI** - Installs Code Discovery CLI (version 0.7.2)
-2. **Configure Credentials** - Sets up API credentials from inputs
-3. **Run Discovery** - Scans repository and generates OpenAPI spec
-4. **Create PR** - Creates a new branch, commits files, and opens a pull request
-
-### Generated Files
-
-The action generates files in the `apisec-bolt-code-discovery/` directory:
-
-- `openapi_spec.yaml` - OpenAPI 3.0 specification
-- `state.yaml` - State file tracking application and instance IDs
-
-Both files are automatically committed to the pull request.
-
-## State Management
-
-The action uses state management to track your application across runs:
-
-- **First Run**: Creates a new application and stores IDs in `state.yaml`
-- **Subsequent Runs**: Updates the existing application using stored IDs
-
-The state file (`apisec-bolt-code-discovery/state.yaml`) is safe to commit and contains no sensitive data.
-
-## Error Handling
-
-The action is designed to be non-blocking:
-
-- ⚠️ Discovery warnings don't fail the workflow
-- ⚠️ API errors are logged but don't stop execution
-- ✅ Workflow continues even if discovery encounters issues
-
-## Supported Frameworks
-
-- **Java**: Spring Boot, Micronaut, Argos
-- **Python**: FastAPI, Flask, Django
-- **Node.js**: Express
-- **.NET**: ASP.NET Core
-- **Go**: Gin
-
-More frameworks coming soon!
+Set the instance host URL in the APIsec console after the first run if the default `/` is not your API base.
 
 ## Requirements
 
-- Python 3.9+ (available on GitHub Actions runners)
-- Git (for PR creation)
-- GitHub CLI (`gh`) - pre-installed on GitHub Actions runners
+- Python 3.11 (installed by the Action)
+- An APIsec PAT with `app:create`
 
-## License
+## Rollback
 
-MIT License - see [LICENSE](LICENSE) file for details.
-
-## Support
-
-For issues and questions, please open an issue in the [repository](https://github.com/apisec-inc/apisec-bolt-code-discovery-github-action).
-
-## Quick Start
-
-1. **Add workflow file** `.github/workflows/api-discovery.yml`:
-   ```yaml
-   name: API Discovery
-   on:
-     push:
-       branches: [main]
-   jobs:
-     discover:
-       runs-on: ubuntu-latest
-       permissions:
-         contents: write
-         pull-requests: write
-       steps:
-         - uses: actions/checkout@v4
-         - uses: apisec-inc/apisec-bolt-code-discovery-github-action@v0.1.7
-           with:
-             api-endpoint: ${{ secrets.API_DISCOVERY_ENDPOINT }}
-             api-token: ${{ secrets.API_DISCOVERY_TOKEN }}
-   ```
-
-2. **Configure secrets** in repository Settings → Secrets:
-   - `API_DISCOVERY_ENDPOINT` - Your API endpoint URL
-   - `API_DISCOVERY_TOKEN` - Your Bearer token
-
-3. **Push to trigger** - The action will run automatically!
-
+Pin `@v0.1.8` to run Code Discovery again.
