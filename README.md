@@ -1,6 +1,6 @@
 # Code Discovery GitHub Action
 
-Scans your repository with the Surface CLI (`apisec-code-bolt`) and uploads the result to APIsec. Existing Code Discovery apps are updated in place.
+Scans your repository with the Surface CLI (`apisec-surface`) and uploads the result to APIsec. Existing Code Discovery apps are updated in place.
 
 Ship this cutover as **`v1.0.0`** / **`v1`**. Keep **`v0.1.8`** pinned if you need to roll back to Code Discovery.
 
@@ -65,7 +65,7 @@ The Action never fails the workflow. Check `success` if a later step should stop
 
 ## How it works
 
-1. Installs Python 3.11 and Surface CLI `0.1.11`
+1. Installs Python 3.11 and Surface CLI `0.1.13`
 2. Registers or reuses one APIsec application per GitHub repo (`github:<repository_id>`)
 3. Uploads the Surface manifest; the reasoning engine publishes the OpenAPI spec
 

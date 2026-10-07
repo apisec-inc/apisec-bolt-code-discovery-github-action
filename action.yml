@@ -73,8 +73,8 @@ runs:
       shell: bash
       run: |
         python -m pip install --upgrade pip
-        pip install "apisec-code-bolt==0.1.10"
-        apisec-code-bolt telemetry off || true
+        pip install "apisec-surface==0.1.13"
+        apisec-surface telemetry off || true
 
     - name: Run Surface discovery
       id: discovery
@@ -104,7 +104,7 @@ runs:
           ARGS+=(--dry-run)
         fi
         set +e
-        apisec-code-bolt "${ARGS[@]}" 2> >(tee scan.ndjson >&2)
+        apisec-surface "${ARGS[@]}" 2> >(tee scan.ndjson >&2)
         RC=$?
         set -e
 
