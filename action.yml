@@ -108,6 +108,9 @@ runs:
         RC=$?
         set -e
         cat scan.ndjson >&2
+        if [ "$RC" != "0" ]; then
+          echo "::warning title=APIsec Surface::Scan or upload failed (exit code $RC); results were not sent to APIsec. See the step log for details."
+        fi
 
         RC="$RC" python - <<'PY'
         import json
