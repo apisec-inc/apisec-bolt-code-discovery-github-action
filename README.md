@@ -1,6 +1,6 @@
 # Code Discovery GitHub Action
 
-Automatically discover API endpoints in your repository and upload them to the APIsec platform. This action uses the Code Discovery CLI to scan your codebase, generate OpenAPI specifications, and create pull requests with the results.
+Automatically discover API endpoints in your repository and upload them to the APIsec platform. This action uses the **Surface / Code Discovery CLI** to scan your codebase, generate OpenAPI specifications, and create pull requests with the results.
 
 ## Features
 
@@ -158,7 +158,7 @@ The action is designed to be non-blocking:
 - **Python**: FastAPI, Flask, Django
 - **Node.js**: Express
 - **.NET**: ASP.NET Core
-- **Go**: Gin
+- **Go**: Gin (`github.com/gin-gonic/gin`) — HTTP routes, group prefixes, JWT/middleware auth, and request inputs from handler code (requires a CLI release that includes Go/Gin support)
 
 More frameworks coming soon!
 
